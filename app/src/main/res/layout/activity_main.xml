@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical"
+              android:padding="16dp">
+    <Button
+            android:id="@+id/btnControlDevice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Điều khiển thiết bị"
+            android:layout_marginTop="16dp"
+            android:layout_gravity="center" />
+    <!-- Đồ thị 1 -->
+    <com.github.mikephil.charting.charts.LineChart
+            android:id="@+id/lineChart1"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginBottom="16dp" />
+
+    <!-- Đồ thị 2 -->
+    <TextView
+            android:text="Nhiệt độ"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/temperature"
+            android:gravity="center" />
+    <com.github.mikephil.charting.charts.LineChart
+            android:id="@+id/lineChart2"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginBottom="16dp" />
+
+    <!-- Đồ thị 3 -->
+    <TextView
+            android:text="Độ ẩm đất"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/soilHumi"
+            android:gravity="center" />
+    <com.github.mikephil.charting.charts.LineChart
+            android:id="@+id/lineChart3"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+    <TextView
+            android:text="Độ ẩm không khí"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/airHumi"
+            android:gravity="center" />
+
+</LinearLayout>
