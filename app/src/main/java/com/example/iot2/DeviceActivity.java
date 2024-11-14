@@ -30,8 +30,10 @@ public class DeviceActivity extends AppCompatActivity {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
+                    status1.setTextColor(getResources().getColor(R.color.teal_700));
                     status1.setText("Đang hoạt động");
                 } else {
+                    status1.setTextColor(getResources().getColor(R.color.black));
                     status1.setText("Đang tắt");
                 }
             }
@@ -42,8 +44,10 @@ public class DeviceActivity extends AppCompatActivity {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
+                    status2.setTextColor(getResources().getColor(R.color.teal_700));
                     status2.setText("Đang hoạt động");
                 } else {
+                    status2.setTextColor(getResources().getColor(R.color.black));
                     status2.setText("Đang tắt");
                 }
             }
@@ -54,8 +58,10 @@ public class DeviceActivity extends AppCompatActivity {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
+                    status3.setTextColor(getResources().getColor(R.color.teal_700));
                     status3.setText("Đang hoạt động");
                 } else {
+                    status3.setTextColor(getResources().getColor(R.color.black));
                     status3.setText("Đang tắt");
                 }
             }

@@ -4,7 +4,9 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent"
               android:orientation="vertical"
-              android:padding="16dp">
+              android:padding="16dp"
+              android:background="@color/white"
+>
 
     <!-- Switch 1 -->
     <LinearLayout
@@ -17,7 +19,8 @@
                 android:id="@+id/switch1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Switch 1"/>
+                android:text="Switch 1"
+                android:textColor="@color/black"/>
 
         <TextView
                 android:id="@+id/status1"
@@ -25,7 +28,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
                 android:text="Đang tắt"
-                android:textSize="16sp"/>
+                android:textSize="16sp"
+                android:textColor="@color/black"/>
     </LinearLayout>
 
     <!-- Switch 2 -->
@@ -39,7 +43,8 @@
                 android:id="@+id/switch2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Switch 2"/>
+                android:text="Switch 2"
+                android:textColor="@color/black"/>
 
         <TextView
                 android:id="@+id/status2"
@@ -47,7 +52,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
                 android:text="Đang tắt"
-                android:textSize="16sp"/>
+                android:textSize="16sp"
+                android:textColor="@color/black"/>
     </LinearLayout>
 
     <!-- Switch 3 -->
@@ -60,7 +66,8 @@
                 android:id="@+id/switch3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Switch 3"/>
+                android:text="Switch 3"
+                android:textColor="@color/black"/>
 
         <TextView
                 android:id="@+id/status3"
@@ -68,7 +75,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
                 android:text="Đang tắt"
-                android:textSize="16sp"/>
+                android:textSize="16sp"
+                android:textColor="@color/black"/>
     </LinearLayout>
 
 </LinearLayout>
