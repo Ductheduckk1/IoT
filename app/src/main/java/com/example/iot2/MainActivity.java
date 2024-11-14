@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private Handler handler = new Handler(Looper.getMainLooper());
 
     private static final String MQTT_BROKER = "tcp://broker.hivemq.com:1883";
-    private static final String CLIENT_ID = "AndroidClient";
+    private static final String CLIENT_ID = "AndroidClientChart";
     private static final String TOPIC1 = "/PTIT_Test/p/temp1";
     private static final String TOPIC2 = "/PTIT_Test/p/hum1";
     private static final String TOPIC3 = "iot/sensor/field3";
@@ -66,7 +66,6 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 // Tạo Intent để chuyển tới DeviceActivity
                 Intent intent = new Intent(MainActivity.this, DeviceActivity.class);
-                Log.i("ConnectionStatus", String.valueOf(mqttClient.isConnected()));
                 startActivity(intent);
             }
         });
