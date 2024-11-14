@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import androidx.appcompat.app.AppCompatActivity;
@@ -14,7 +15,6 @@ import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import org.eclipse.paho.client.mqttv3.*;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 
@@ -30,9 +30,13 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String MQTT_BROKER = "tcp://broker.hivemq.com:1883";
     private static final String CLIENT_ID = "AndroidClient";
-    private static final String TOPIC1 = "iot/sensor/field1";
-    private static final String TOPIC2 = "iot/sensor/field2";
+    private static final String TOPIC1 = "/PTIT_Test/p/temp1";
+    private static final String TOPIC2 = "/PTIT_Test/p/hum1";
     private static final String TOPIC3 = "iot/sensor/field3";
+
+//    private static final String TOPIC1 = "iot/sensor/field1";
+//    private static final String TOPIC2 = "iot/sensor/field2";
+//    private static final String TOPIC3 = "iot/sensor/field3";
 
     private MqttClient mqttClient;
 
@@ -51,8 +55,8 @@ public class MainActivity extends AppCompatActivity {
         setupLineChart(lineChart2, dataEntries2);
         setupLineChart(lineChart3, dataEntries3);
 
-        // Kết nối tới HiveMQ và đăng ký chủ đề
-        connectToMQTT();
+        // Bắt đầu yêu cầu kết nối, 4s một lần, có thể cho vào hàm riêng nhưng lười quá
+        timerHandler.postDelayed(timerRunnable, 0);
         // Lấy tham chiếu tới Button trong MainActivity
         Button goToDeviceButton = findViewById(R.id.btnControlDevice);
 
@@ -62,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 // Tạo Intent để chuyển tới DeviceActivity
                 Intent intent = new Intent(MainActivity.this, DeviceActivity.class);
+                Log.i("ConnectionStatus", String.valueOf(mqttClient.isConnected()));
                 startActivity(intent);
             }
         });
@@ -94,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
             options.setCleanSession(true);
 
             mqttClient.connect(options);
+
             mqttClient.subscribe(TOPIC1);
             mqttClient.subscribe(TOPIC2);
             mqttClient.subscribe(TOPIC3);
@@ -102,11 +108,14 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void connectionLost(Throwable cause) {
                     // Xử lý khi mất kết nối
+                    Log.w("ConnectionStatus", "Connection lost, reconnecting...");
+                    timerHandler.postDelayed(timerRunnable, 0);
                 }
 
                 @Override
                 public void messageArrived(String topic, MqttMessage message) throws Exception {
                     String payload = new String(message.getPayload());
+                    Log.i("PayloadMessage", payload);
                     processIncomingData(topic, payload);
                 }
 
@@ -121,10 +130,30 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //Connecting Timer
+    private final Handler timerHandler = new Handler(Looper.myLooper());
+    private final Runnable timerRunnable = new Runnable() {
+        @Override
+        public void run() {
+            Log.i("mqtt", "Trying to connect...");
+            connectToMQTT();
+            if (!mqttClient.isConnected()) {
+                //Nếu vẫn chưa kết nối được thì thử lại
+                timerHandler.postDelayed(this, 4000);
+            } else {
+                timerHandler.removeCallbacks(this);
+                Log.i("mqtt", "Connection Success");
+
+            }
+        }
+    };
+
     private void processIncomingData(String topic, String payload) {
         try {
-            JSONObject jsonObject = new JSONObject(payload);
-            float value = (float) jsonObject.getDouble("value"); // Dữ liệu từ JSON
+//            Không có json ở đây
+//            JSONObject jsonObject = new JSONObject(payload);
+//            float value = (float) jsonObject.getDouble("value"); // Dữ liệu từ JSON
+            float value = Float.parseFloat(payload);
 
             ArrayList<Entry> newEntries = new ArrayList<>();
             if (topic.equals(TOPIC1)) {
