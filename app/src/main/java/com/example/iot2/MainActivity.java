@@ -1,8 +1,11 @@
 package com.example.iot2;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.View;
+import android.widget.Button;
 import androidx.appcompat.app.AppCompatActivity;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.XAxis;
@@ -10,16 +13,10 @@ import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
-import org.json.JSONArray;
+import org.eclipse.paho.client.mqttv3.*;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -31,11 +28,13 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<Entry> dataEntries3 = new ArrayList<>();
     private Handler handler = new Handler(Looper.getMainLooper());
 
-    private static final String CHANNEL_ID = "2740590";
-    private static final String READ_API_KEY = "THW9FA19QUUTN846";
-    private static final String THINGSPEAK_URL = "https://api.thingspeak.com/channels/" + CHANNEL_ID + "/fields/1.json?api_key=" + READ_API_KEY + "&results=10";
-    private static final String THINGSPEAK_URL_2 = "https://api.thingspeak.com/channels/" + CHANNEL_ID + "/fields/2.json?api_key=" + READ_API_KEY + "&results=10";
-    private static final String THINGSPEAK_URL_3 = "https://api.thingspeak.com/channels/" + CHANNEL_ID + "/fields/3.json?api_key=" + READ_API_KEY + "&results=10";
+    private static final String MQTT_BROKER = "tcp://broker.hivemq.com:1883";
+    private static final String CLIENT_ID = "AndroidClient";
+    private static final String TOPIC1 = "iot/sensor/field1";
+    private static final String TOPIC2 = "iot/sensor/field2";
+    private static final String TOPIC3 = "iot/sensor/field3";
+
+    private MqttClient mqttClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,24 +47,28 @@ public class MainActivity extends AppCompatActivity {
         lineChart3 = findViewById(R.id.lineChart3);
 
         // Thiết lập ba đồ thị
-        setupLineChart(lineChart1, lineDataSet1, dataEntries1);
-        setupLineChart(lineChart2, lineDataSet2, dataEntries2);
-        setupLineChart(lineChart3, lineDataSet3, dataEntries3);
+        setupLineChart(lineChart1, dataEntries1);
+        setupLineChart(lineChart2, dataEntries2);
+        setupLineChart(lineChart3, dataEntries3);
 
-        // Tạo Timer để tự động cập nhật dữ liệu mỗi 10 giây
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
+        // Kết nối tới HiveMQ và đăng ký chủ đề
+        connectToMQTT();
+        // Lấy tham chiếu tới Button trong MainActivity
+        Button goToDeviceButton = findViewById(R.id.btnControlDevice);
+
+        // Thiết lập sự kiện khi nhấn nút
+        goToDeviceButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void run() {
-                fetchDataFromThingSpeak(THINGSPEAK_URL, 1);
-                fetchDataFromThingSpeak(THINGSPEAK_URL_2, 2);
-                fetchDataFromThingSpeak(THINGSPEAK_URL_3, 3);
+            public void onClick(View v) {
+                // Tạo Intent để chuyển tới DeviceActivity
+                Intent intent = new Intent(MainActivity.this, DeviceActivity.class);
+                startActivity(intent);
             }
-        }, 0, 10000); // Cập nhật mỗi 10 giây
+        });
     }
 
-    private void setupLineChart(LineChart lineChart, LineDataSet lineDataSet, ArrayList<Entry> dataEntries) {
-        lineDataSet = new LineDataSet(dataEntries, "Data from ThingSpeak");
+    private void setupLineChart(LineChart lineChart, ArrayList<Entry> dataEntries) {
+        LineDataSet lineDataSet = new LineDataSet(dataEntries, "Data from HiveMQ");
         lineDataSet.setLineWidth(2f);
         lineDataSet.setColor(getResources().getColor(android.R.color.holo_blue_light));
         lineDataSet.setCircleRadius(4f);
@@ -84,83 +87,81 @@ public class MainActivity extends AppCompatActivity {
         rightAxis.setEnabled(false); // Ẩn trục Y bên phải
     }
 
-    private void fetchDataFromThingSpeak(String urlStr, int chartNumber) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    URL url = new URL(urlStr);
-                    HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-                    urlConnection.setRequestMethod("GET");
-                    urlConnection.connect();
+    private void connectToMQTT() {
+        try {
+            mqttClient = new MqttClient(MQTT_BROKER, CLIENT_ID, null);
+            MqttConnectOptions options = new MqttConnectOptions();
+            options.setCleanSession(true);
 
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
-                    StringBuilder result = new StringBuilder();
-                    String line;
+            mqttClient.connect(options);
+            mqttClient.subscribe(TOPIC1);
+            mqttClient.subscribe(TOPIC2);
+            mqttClient.subscribe(TOPIC3);
 
-                    while ((line = reader.readLine()) != null) {
-                        result.append(line);
-                    }
-
-                    reader.close();
-                    urlConnection.disconnect();
-
-                    ArrayList<Entry> newEntries = parseJSONData(result.toString());
-
-                    // Cập nhật UI trên luồng chính
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            updateChart(newEntries, chartNumber);
-                        }
-                    });
-                } catch (Exception e) {
-                    e.printStackTrace();
+            mqttClient.setCallback(new MqttCallback() {
+                @Override
+                public void connectionLost(Throwable cause) {
+                    // Xử lý khi mất kết nối
                 }
-            }
-        }).start();
+
+                @Override
+                public void messageArrived(String topic, MqttMessage message) throws Exception {
+                    String payload = new String(message.getPayload());
+                    processIncomingData(topic, payload);
+                }
+
+                @Override
+                public void deliveryComplete(IMqttDeliveryToken token) {
+                    // Xử lý khi hoàn tất gửi tin
+                }
+            });
+
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
     }
 
-    private ArrayList<Entry> parseJSONData(String jsonString) {
-        ArrayList<Entry> entries = new ArrayList<>();
+    private void processIncomingData(String topic, String payload) {
         try {
-            JSONObject jsonObject = new JSONObject(jsonString);
-            JSONArray feedsArray = jsonObject.getJSONArray("feeds");
+            JSONObject jsonObject = new JSONObject(payload);
+            float value = (float) jsonObject.getDouble("value"); // Dữ liệu từ JSON
 
-            for (int i = 0; i < feedsArray.length(); i++) {
-                JSONObject feed = feedsArray.getJSONObject(i);
-                float value = (float) feed.getDouble("field1");
-                entries.add(new Entry(i, value)); // Sử dụng i làm trục X
+            ArrayList<Entry> newEntries = new ArrayList<>();
+            if (topic.equals(TOPIC1)) {
+                dataEntries1.add(new Entry(dataEntries1.size(), value));
+                newEntries = dataEntries1;
+            } else if (topic.equals(TOPIC2)) {
+                dataEntries2.add(new Entry(dataEntries2.size(), value));
+                newEntries = dataEntries2;
+            } else if (topic.equals(TOPIC3)) {
+                dataEntries3.add(new Entry(dataEntries3.size(), value));
+                newEntries = dataEntries3;
             }
+
+            final ArrayList<Entry> finalNewEntries = newEntries;
+            handler.post(() -> updateChart(finalNewEntries, topic));
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return entries;
     }
 
-    private void updateChart(ArrayList<Entry> newEntries, int chartNumber) {
-        switch (chartNumber) {
-            case 1:
-            dataEntries1.clear();
-            dataEntries1.addAll(newEntries);
-            lineDataSet1.notifyDataSetChanged();
-            lineChart1.notifyDataSetChanged();
-            lineChart1.invalidate();
-            break;
-            case 2:
-            dataEntries2.clear();
-            dataEntries2.addAll(newEntries);
-            lineDataSet2.notifyDataSetChanged();
-            lineChart2.notifyDataSetChanged();
-            lineChart2.invalidate();
-            break;
-            case 3:
-            dataEntries3.clear();
-            dataEntries3.addAll(newEntries);
-            lineDataSet3.notifyDataSetChanged();
-            lineChart3.notifyDataSetChanged();
-            lineChart3.invalidate();
-            break;
+    private void updateChart(ArrayList<Entry> newEntries, String topic) {
+        switch (topic) {
+            case TOPIC1:
+                lineData1 = new LineData(new LineDataSet(newEntries, "Field 1 Data"));
+                lineChart1.setData(lineData1);
+                lineChart1.invalidate();
+                break;
+            case TOPIC2:
+                lineData2 = new LineData(new LineDataSet(newEntries, "Field 2 Data"));
+                lineChart2.setData(lineData2);
+                lineChart2.invalidate();
+                break;
+            case TOPIC3:
+                lineData3 = new LineData(new LineDataSet(newEntries, "Field 3 Data"));
+                lineChart3.setData(lineData3);
+                lineChart3.invalidate();
+                break;
         }
     }
 }
