@@ -14,9 +14,13 @@ import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
 import org.eclipse.paho.client.mqttv3.*;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -172,21 +176,35 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
-
+    private ArrayList<String> timeLabels = new ArrayList<>();
     private void updateChart(ArrayList<Entry> newEntries, String topic) {
+        String currentTime = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
+        timeLabels.add(currentTime); // Thêm nhãn thời gian mới
+        // Giới hạn số điểm dữ liệu, ví dụ giữ lại tối đa 20 điểm
+        int maxDataPoints = 5;
+        if (newEntries.size() > maxDataPoints) {
+            newEntries = new ArrayList<>(newEntries.subList(newEntries.size() - maxDataPoints, newEntries.size()));
+        }
+
         switch (topic) {
             case TOPIC1:
-                lineData1 = new LineData(new LineDataSet(newEntries, "Field 1 Data"));
+                LineDataSet dataSet1 = new LineDataSet(newEntries, "Nhiệt độ");
+                lineChart1.getXAxis().setValueFormatter(new IndexAxisValueFormatter(timeLabels));
+                lineData1 = new LineData(dataSet1);
                 lineChart1.setData(lineData1);
                 lineChart1.invalidate();
                 break;
             case TOPIC2:
-                lineData2 = new LineData(new LineDataSet(newEntries, "Field 2 Data"));
+                LineDataSet dataSet2 = new LineDataSet(newEntries, "Độ ẩm không khí");
+                lineChart2.getXAxis().setValueFormatter(new IndexAxisValueFormatter(timeLabels));
+                lineData2 = new LineData(dataSet2);
                 lineChart2.setData(lineData2);
                 lineChart2.invalidate();
                 break;
             case TOPIC3:
-                lineData3 = new LineData(new LineDataSet(newEntries, "Field 3 Data"));
+                LineDataSet dataSet3 = new LineDataSet(newEntries, "Độ ẩm đất");
+                lineChart3.getXAxis().setValueFormatter(new IndexAxisValueFormatter(timeLabels));
+                lineData3 = new LineData(dataSet3);
                 lineChart3.setData(lineData3);
                 lineChart3.invalidate();
                 break;

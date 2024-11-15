@@ -19,7 +19,7 @@ public class DeviceActivity extends AppCompatActivity {
 
     private static final String MQTT_BROKER = "tcp://broker.hivemq.com:1883";
     private static final String CLIENT_ID = "AndroidClientSwtich";
-    private static final String LED_TOPIC = "PTIT/iot/led";
+    private static final String LED_TOPIC = "/PTIT_Test/p/led2";
     private static final String FAN_TOPIC = "PTIT/iot/fan";
     private static final String PUMP_TOPIC = "PTIT/iot/pump";
 
