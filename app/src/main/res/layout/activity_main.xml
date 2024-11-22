@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_width="match_parent"
               android:layout_height="match_parent"
               android:orientation="vertical"
               android:padding="16dp"
@@ -15,12 +16,19 @@
             android:layout_marginTop="16dp"
             android:layout_gravity="center" />
     <!-- Đồ thị 1 -->
+    <TextView
+
+            android:text="Đang kết nối"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/conStatus"
+            android:textColor="@color/black"/>
     <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/lineChart1"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:layout_marginBottom="16dp" />
+            android:layout_marginBottom="10dp" />
 
     <!-- Đồ thị 2 -->
     <TextView
@@ -28,7 +36,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/temperature"
-            android:gravity="center" />
+            android:gravity="center" android:textColor="@color/black"/>
     <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/lineChart2"
             android:layout_width="match_parent"
@@ -42,7 +50,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/soilHumi"
-            android:gravity="center" />
+            android:gravity="center" android:textColor="@color/black"/>
     <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/lineChart3"
             android:layout_width="match_parent"
@@ -53,6 +61,16 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/airHumi"
-            android:gravity="center" />
-
+            android:gravity="center" android:textColor="@color/black"/>
+    <com.github.mikephil.charting.charts.LineChart
+            android:id="@+id/lineChart4"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+    <TextView
+            android:text="Cường độ sáng"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/lum"
+            android:gravity="center" android:textColor="@color/black"/>
 </LinearLayout>
