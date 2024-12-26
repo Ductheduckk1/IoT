@@ -18,7 +18,6 @@ import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
 import org.eclipse.paho.client.mqttv3.*;
 
-import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -77,6 +76,17 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 // Tạo Intent để chuyển tới DeviceActivity
                 Intent intent = new Intent(MainActivity.this, DeviceActivity.class);
+                startActivity(intent);
+            }
+        });
+        Button goToPlantButton = findViewById(R.id.btnPlantIdentify);
+
+        // Thiết lập sự kiện khi nhấn nút
+        goToPlantButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Tạo Intent để chuyển tới DeviceActivity
+                Intent intent = new Intent(MainActivity.this, PlantActivity.class);
                 startActivity(intent);
             }
         });
