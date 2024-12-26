@@ -22,8 +22,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
+    private static final Random random = new Random();
 
     private LineChart lineChart1, lineChart2, lineChart3, lineChart4;
     private LineData lineData1, lineData2, lineData3, lineData4;
@@ -35,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private final Handler handler = new Handler(Looper.getMainLooper());
 
     private static final String MQTT_BROKER = "tcp://broker.hivemq.com:1883";
-    private static final String CLIENT_ID = "PtitIotCharClient";
+    private static final String CLIENT_ID = "PtitIotCharClient_" + random.nextInt();
     private static final String TEMP_TOPIC = "PTIT/iot/temp1";
     private static final String HUM_TOPIC = "PTIT/iot/hum1";
     private static final String SOIL_HUM_TOPIC = "PTIT/iot/soilMois";
