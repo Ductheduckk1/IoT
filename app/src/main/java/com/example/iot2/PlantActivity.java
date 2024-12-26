@@ -1,10 +1,11 @@
 package com.example.iot2;
 
-import android.content.ContentResolver;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.widget.Button;
@@ -14,6 +15,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import okhttp3.*;
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -23,7 +25,6 @@ import org.jsoup.select.Elements;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 public class PlantActivity extends AppCompatActivity {
     private ImageView imageView;
@@ -47,12 +48,12 @@ public class PlantActivity extends AppCompatActivity {
 
 //                    String base64String = "data:image/jpeg;base64,"+encodeImageToBase64(selectedImageUri);
 
-                    // Hiển thị chuỗi Base64 trên terminal (Logcat)
                     analyzePlant(selectedImageUri);
                     getHealth(selectedImageUri);
                 }
             });
 
+    private final Handler httpHandler = new Handler(Looper.myLooper());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,63 +66,29 @@ public class PlantActivity extends AppCompatActivity {
 
         Button galleryButton = findViewById(R.id.galleryButton);
 
-
         galleryButton.setOnClickListener(v -> openGallery());
     }
-
-
 
     private void openGallery() {
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         galleryLauncher.launch(intent);
     }
 
-    private void analyzePlant(Uri imageUri)  {
-        // Chìa khóa API của bạn
+    private void analyzePlant(Uri imageUri) {
+        // Chìa khóa API
         String plantIDApiKey = "fCjvXrju6PkameyQhFjrNCt026M53AD2GLifCWy8ksml1z2maJ";
         String apiUrl = "https://plant.id/api/v3/identification";
 
         // Mã hóa ảnh thành base64
-        String encodedImage = "data:image/jpeg;base64,"+encodeImageToBase64(imageUri);
-        System.out.println(encodedImage);
-        if (encodedImage == null) {
+        String encodedString = encodeImageToBase64(imageUri);
+        if (encodedString == null) {
             runOnUiThread(() -> resultTextView.setText("Error: Unable to encode image"));
             return; // Dừng lại nếu không mã hóa được ảnh
         }
 
+        String encodedImage = "data:image/jpeg;base64," + encodeImageToBase64(imageUri);
         // Tạo JSON request body với ảnh mã hóa
-        String imageBase64 = encodedImage;
-
-        // Creating the JSON structure
-        JSONObject jsonBody = new JSONObject();
-
-        // Adding the images array
-        JSONArray imagesArray = new JSONArray();
-        imagesArray.put(imageBase64);
-        try {
-            jsonBody.put("images", imagesArray);
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        }
-
-        // Adding latitude and longitude
-        try {
-            jsonBody.put("latitude", 49.207);
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        }
-        try {
-            jsonBody.put("longitude", 16.608);
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        }
-
-        // Adding similar_images field
-        try {
-            jsonBody.put("similar_images", true);
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        }
+        JSONObject jsonBody = getJsonObject(encodedImage);
 
         OkHttpClient client = new OkHttpClient();
         MediaType mediaType = MediaType.parse("application/json");
@@ -133,24 +100,49 @@ public class PlantActivity extends AppCompatActivity {
                 .addHeader("Content-Type", "application/json")
                 .build();
 
-        new Thread(() -> {
-            try {
-                Response response = client.newCall(request).execute();
-                if (response.isSuccessful()) {
-                    // Xử lý phản hồi
-                    String responseBody = response.body().string();
-                    // Lấy tên cây từ phản hồi JSON và hiển thị
-                    String commonName = getName(extractCommonName(responseBody)); // Phương thức bạn đã viết để lấy tên cây
-                    runOnUiThread(() -> resultTextView.setText(commonName));
-                } else {
-                    runOnUiThread(() -> resultTextView.setText("Error identifying plant, response code" + response.code()));
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Response response = client.newCall(request).execute();
+                    if (response.isSuccessful()) {
+                        // Xử lý phản hồi
+                        String responseBody = response.body().string();
+                        // Lấy tên cây từ phản hồi JSON và hiển thị
+                        String commonName = getName(extractCommonName(responseBody)); // Phương thức bạn đã viết để lấy tên cây
+                        runOnUiThread(() -> resultTextView.setText(commonName));
+                        httpHandler.removeCallbacks(this);
+                    } else {
+                        runOnUiThread(() -> resultTextView.setText("Error identifying plant, response code" + response.code()));
+                    }
+                    response.close(); // Đảm bảo đóng kết nối sau khi sử dụng
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    runOnUiThread(() -> resultTextView.setText("Error: " + e.getMessage()));
                 }
-                response.close(); // Đảm bảo đóng kết nối sau khi sử dụng
-            } catch (IOException e) {
-                e.printStackTrace();
-                runOnUiThread(() -> resultTextView.setText("Error: " + e.getMessage()));
             }
-        }).start();
+        };
+        httpHandler.post(runnable);
+    }
+
+    private static @NotNull JSONObject getJsonObject(String encodedImage) {
+        // Creating the JSON structure
+        JSONObject jsonBody = new JSONObject();
+
+        // Adding the images array
+        JSONArray imagesArray = new JSONArray();
+        imagesArray.put(encodedImage);
+        try {
+            jsonBody.put("images", imagesArray);
+            // Adding latitude and longitude
+            jsonBody.put("latitude", 49.207);
+            jsonBody.put("longitude", 16.608);
+            // Adding similar_images field
+            jsonBody.put("similar_images", true);
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
+        return jsonBody;
     }
     private void getHealth(Uri imageUri){
         String plantIDApiKey = "fCjvXrju6PkameyQhFjrNCt026M53AD2GLifCWy8ksml1z2maJ";
@@ -259,7 +251,7 @@ public class PlantActivity extends AppCompatActivity {
                 // Lấy tên cây từ trường "name" trong đối tượng "suggestion"
                 String plantName = firstSuggestion.optString("name");
 
-                if (plantName != null && !plantName.isEmpty()) {
+                if (!plantName.isEmpty()) {
                     return plantName;
                 }
             }
@@ -271,41 +263,26 @@ public class PlantActivity extends AppCompatActivity {
 
 
     private String encodeImageToBase64(Uri imageUri) {
-        ContentResolver contentResolver = getContentResolver();
-        InputStream inputStream = null;
-        ByteArrayOutputStream byteArrayOutputStream = null;
-
         try {
             // Lấy InputStream từ Uri
-            Bitmap bitmap= MediaStore.Images.Media.getBitmap(getContentResolver(),imageUri);
+            Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
             // initialize byte stream
-            ByteArrayOutputStream stream=new ByteArrayOutputStream();
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
             // compress Bitmap
-            bitmap.compress(Bitmap.CompressFormat.JPEG,100,stream);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
             // Initialize byte array
-            byte[] bytes=stream.toByteArray();
+            byte[] bytes = stream.toByteArray();
             // get base64 encoded string
-             String sImage= Base64.encodeToString(bytes,Base64.DEFAULT);
             // set encoded text on textview
-            return sImage;
+            return Base64.encodeToString(bytes, Base64.DEFAULT);
 
         } catch (IOException e) {
             e.printStackTrace();
-            return null;
-        } finally {
-            try {
-                if (inputStream != null) {
-                    inputStream.close();
-                }
-                if (byteArrayOutputStream != null) {
-                    byteArrayOutputStream.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
+        return null;
     }
-    private String getName(String name){
+
+    private String getName(String name) {
         String url = "https://vi.wikipedia.org/wiki/" + name.replaceAll(" ", "_");
 
         try {
@@ -315,12 +292,7 @@ public class PlantActivity extends AppCompatActivity {
             // Tìm phần thông tin tên thường dùng trong tiêu đề
             Elements commonNameElement = doc.select("span.mw-page-title-main");
 
-            if (commonNameElement != null) {
-                String commonName = commonNameElement.text();
-                return commonName;
-            } else {
-                return "400";
-            }
+            return commonNameElement.text();
         } catch (IOException e) {
             e.printStackTrace();
             return "404";
