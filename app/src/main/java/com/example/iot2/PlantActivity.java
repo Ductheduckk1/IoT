@@ -28,6 +28,7 @@ import java.io.InputStream;
 public class PlantActivity extends AppCompatActivity {
     private ImageView imageView;
     private TextView resultTextView;
+    private TextView resultHealthTextView;
     private Uri imageUri;
 
     private final ActivityResultLauncher<Intent> cameraLauncher =
@@ -43,10 +44,12 @@ public class PlantActivity extends AppCompatActivity {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                     Uri selectedImageUri = result.getData().getData();
                     imageView.setImageURI(selectedImageUri);
+
 //                    String base64String = "data:image/jpeg;base64,"+encodeImageToBase64(selectedImageUri);
 
                     // Hiển thị chuỗi Base64 trên terminal (Logcat)
                     analyzePlant(selectedImageUri);
+                    getHealth(selectedImageUri);
                 }
             });
 
@@ -58,6 +61,7 @@ public class PlantActivity extends AppCompatActivity {
 
         imageView = findViewById(R.id.imageView);
         resultTextView = findViewById(R.id.resultTextView);
+        resultHealthTextView = findViewById(R.id.resultHealthTextView);
 
         Button galleryButton = findViewById(R.id.galleryButton);
 
@@ -148,7 +152,99 @@ public class PlantActivity extends AppCompatActivity {
             }
         }).start();
     }
+    private void getHealth(Uri imageUri){
+        String plantIDApiKey = "fCjvXrju6PkameyQhFjrNCt026M53AD2GLifCWy8ksml1z2maJ";
+        String apiUrl = "https://plant.id/api/v3/health_assessment";
 
+        // Mã hóa ảnh thành base64
+        String encodedImage = "data:image/jpeg;base64,"+encodeImageToBase64(imageUri);
+        System.out.println(encodedImage);
+        if (encodedImage == null) {
+            runOnUiThread(() -> resultTextView.setText("Error: Unable to encode image"));
+            return; // Dừng lại nếu không mã hóa được ảnh
+        }
+
+        // Tạo JSON request body với ảnh mã hóa
+        String imageBase64 = encodedImage;
+
+        // Creating the JSON structure
+        JSONObject jsonBody = new JSONObject();
+
+        // Adding the images array
+        JSONArray imagesArray = new JSONArray();
+        imagesArray.put(imageBase64);
+        try {
+            jsonBody.put("images", imagesArray);
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
+
+        // Adding latitude and longitude
+        try {
+            jsonBody.put("latitude", 49.207);
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
+        try {
+            jsonBody.put("longitude", 16.608);
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
+
+        // Adding similar_images field
+        try {
+            jsonBody.put("similar_images", true);
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
+
+        OkHttpClient client = new OkHttpClient();
+        MediaType mediaType = MediaType.parse("application/json");
+        RequestBody body = RequestBody.create(mediaType, jsonBody.toString());
+        Request request = new Request.Builder()
+                .url(apiUrl)
+                .post(body)
+                .addHeader("Api-Key", plantIDApiKey)
+                .addHeader("Content-Type", "application/json")
+                .build();
+
+        new Thread(() -> {
+            try {
+                Response response = client.newCall(request).execute();
+                if (response.isSuccessful()) {
+                    // Xử lý phản hồi
+                    String responseBody = response.body().string();
+                    // Lấy tên cây từ phản hồi JSON và hiển thị
+                    String status = extractHealthStatus(responseBody); // Phương thức bạn đã viết để lấy tên cây
+                    runOnUiThread(() -> resultHealthTextView.setText(status));
+                } else {
+                    runOnUiThread(() -> resultHealthTextView.setText("Error identifying plant, response code" + response.code()));
+                }
+                response.close(); // Đảm bảo đóng kết nối sau khi sử dụng
+            } catch (IOException e) {
+                e.printStackTrace();
+                runOnUiThread(() -> resultHealthTextView.setText("Error: " + e.getMessage()));
+            }
+        }).start();
+    }
+    private String extractHealthStatus(String responseBody) {
+        try {
+            // Phân tích JSON và lấy thông tin sức khỏe cây
+            JSONObject responseJson = new JSONObject(responseBody);
+            JSONObject isHealthyObject = responseJson.optJSONObject("result").optJSONObject("is_healthy");
+
+            if (isHealthyObject != null) {
+                // Lấy giá trị binary từ is_healthy
+                boolean isHealthyBinary = isHealthyObject.optBoolean("binary", false);
+
+                // Trả về kết quả dưới dạng chuỗi
+                return isHealthyBinary ? "Khỏe mạnh" : "Không khỏe mạnh";
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "Unable to extract health status";
+    }
     private String extractCommonName(String responseBody) {
         try {
             // Phân tích JSON và lấy tên cây

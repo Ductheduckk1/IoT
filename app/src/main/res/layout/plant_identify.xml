@@ -20,12 +20,48 @@
             android:text="Chọn ảnh từ bộ sưu tập"
             android:textColor="@color/black"/>
 
-    <TextView
-            android:id="@+id/resultTextView"
+    <LinearLayout
+            android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingTop="16dp"
-            android:text="Result will be displayed here"
-            android:textColor="@color/black"
-            android:textSize="16sp" />
+            android:gravity="center">
+        <TextView
+                android:id="@+id/result"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingTop="16dp"
+                android:text="Tên giống cây: "
+                android:textColor="@color/black"
+                android:textSize="16sp"/>
+        <TextView
+                android:id="@+id/resultTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="16dp"
+                android:text=""
+                android:textColor="@color/black"
+                android:textSize="16sp" />
+    </LinearLayout>
+    <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center">
+        <TextView
+                android:id="@+id/resultHealth"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingTop="16dp"
+                android:text="Tình trạng: "
+                android:textColor="@color/black"
+                android:textSize="16sp"/>
+        <TextView
+                android:id="@+id/resultHealthTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="16dp"
+                android:text=""
+                android:textColor="@color/black"
+                android:textSize="16sp" />
+    </LinearLayout>
 </LinearLayout>

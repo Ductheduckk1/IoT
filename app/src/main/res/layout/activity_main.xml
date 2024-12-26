@@ -26,7 +26,7 @@
         <!-- Nút mới thêm cạnh btnControlDevice -->
         <Button
                 android:id="@+id/btnPlantIdentify"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Nhận diện cây"
                 android:layout_marginTop="16dp"/>
