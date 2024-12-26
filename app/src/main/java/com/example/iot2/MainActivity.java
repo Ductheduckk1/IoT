@@ -171,10 +171,12 @@ public class MainActivity extends AppCompatActivity {
             if (!mqttClient.isConnected()) {
                 //Nếu vẫn chưa kết nối được thì thử lại
                 conStatus.setText("Kết nối thất bại. Đang thử lại... ");
+                conStatus.setTextColor(getResources().getColor(R.color.red));
                 timerHandler.postDelayed(this, 4000);
             } else {
                 timerHandler.removeCallbacks(this);
                 conStatus.setText("Kết nối thành công!");
+                conStatus.setTextColor(getResources().getColor(R.color.teal_700));
                 Log.i("mqtt", "Connection Success");
 
             }

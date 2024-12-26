@@ -3,7 +3,8 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent"
               android:orientation="vertical"
-              android:padding="16dp">
+              android:padding="16dp"
+              android:background="@color/white">
 
     <ImageView
             android:id="@+id/imageView"
@@ -13,16 +14,11 @@
             android:background="#cccccc" />
 
     <Button
-            android:id="@+id/cameraButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Take Photo" />
-
-    <Button
             android:id="@+id/galleryButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Choose from Gallery" />
+            android:text="Chọn ảnh từ bộ sưu tập"
+            android:textColor="@color/black"/>
 
     <TextView
             android:id="@+id/resultTextView"
@@ -30,5 +26,6 @@
             android:layout_height="wrap_content"
             android:paddingTop="16dp"
             android:text="Result will be displayed here"
+            android:textColor="@color/black"
             android:textSize="16sp" />
 </LinearLayout>
